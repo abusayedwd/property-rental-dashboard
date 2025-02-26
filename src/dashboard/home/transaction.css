@@ -1,0 +1,30 @@
+
+.table-container {
+    /* background-color: #1e26; Light beige background color */
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .ant-table {
+    background-color: #f7fbfc; /* Matching the background color of table */
+    border: none;
+  }
+  
+  .ant-table-thead > tr > th {
+    background-color: #193664 !important; /* Header background color */
+    color: #FFFF !important;
+    font-weight: bold;
+  }
+  
+  .ant-table-tbody > tr > td {
+    /* background-color: #fdf6e3; Body background color */
+    color: #000;
+  } 
+  
+  .ant-table-tbody > tr > td:last-child {
+    text-align: center;
+  }
+  
+  .anticon {
+    vertical-align: middle;
+  }

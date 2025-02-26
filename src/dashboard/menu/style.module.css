@@ -1,0 +1,78 @@
+/* OrderTable.module.css */
+.paginationCenter {
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: 16px !important;
+  }
+  
+  .paginationButton {
+    background-color: #2E7D32; /* Dark blue background */
+    color: white; /* White text */
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 14px;
+    margin: 0 4px;
+  }
+  
+  .paginationButton:hover {
+    background-color: #2E7D32; /* Slightly darker blue on hover */
+  }
+  
+  .paginationButtonActive {
+    background-color: #2E7D32; /* Dark blue background */
+    color: white; /* White text */
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  
+  
+  /* for new order */
+  .packageItemContainer {
+    display: flex;
+    align-items: center;
+   
+  }
+  
+  .newLabel {
+    background-color: transparent;
+    color: red;
+    font-weight: bold;
+    padding: 1px 6px;
+    margin-right: 6px;
+    margin-left: -40px;
+    border: 1.5px solid red;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 8px;
+  }
+  
+  /* Order details page css */
+  .customBtn {
+    background-color: transparent !important;
+    color: #193664 !important;
+    border: 1px solid #193664 !important;
+    border-radius: 16px;
+    padding: 8px 16px;
+    /* font-weight: bold; */
+    text-align: center;
+  }
+  
+  .customBtn:hover {
+    /* background-color: #01050c !important;  Optional: Darker red on hover */
+  }
+  .completeStatus {
+    color: black;  /* Green text for "complete" status */
+    /* font-weight: bold;  Make the text bold */
+    background-color: transparent !important;  /* Light green background for emphasis */
+    padding: 4px 16px !important;  /* Add padding for better spacing */
+    border-radius: 16px !important;
+    border: 1px solid #193664 !important;  /* Round the corners for a neat appearance */
+    display: inline-block !important;  /* Ensure it displays correctly within the table */
+  }
+  
