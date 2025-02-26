@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import Home from "../home/Home";
-import ForgotPassword from "../auth/forgotpassword";
+ 
 import VerifyOtp from "../auth/VerifyOtp";
 import UpdatePassword from "../auth/UpdatePassword";
 import Main from "../layout/Main";
@@ -27,10 +27,16 @@ import Addsubscripton from "../dashboard/menu/subscription/Addsubscripton";
 import Editsubscription from "../dashboard/menu/subscription/Editsubscription";
 import Property from "../dashboard/menu/sidebarMenu/Property";
 import Banner from "../dashboard/menu/sidebarMenu/Banner";
-import AddBanner from "../dashboard/menu/sidebarMenu/AddBanner";
+import AddBanner from "../dashboard/menu/sidebarMenu/AddBanner"; 
+import ForgotPassword from "../auth/ForgotPassword";
+import PrivateRoute from "./PrivateRoute";
+ 
+
+
 
 
 export const router = createBrowserRouter([
+
     {
         path: "/",
         element: <Home></Home>,
@@ -51,11 +57,11 @@ export const router = createBrowserRouter([
 
     {
         path: "dashboard",
-        element: <Main></Main>,
+        element:   <PrivateRoute>  <Main></Main></PrivateRoute>,
         children: [
             {
                 path: "home",
-                element: <DashboardHome />
+                element: <DashboardHome /> 
             },
             {
                 path: "banner",

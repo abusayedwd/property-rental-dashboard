@@ -136,7 +136,7 @@ const onSearch = (value, _e, info) => {
         <Table
          
           columns={columns}
-          dataSource={users.slice(0, 5)}
+          dataSource={users?.slice(0, 5)}
           pagination = {false}
         />
       </div>
