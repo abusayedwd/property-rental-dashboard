@@ -87,7 +87,7 @@ const handleChange = (value) => {
           <XAxis dataKey="month" /> {/* Fixed dataKey to 'month' */}
           <YAxis />
           <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey="totalEarnings" barSize={30} fill="#193664" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="totalEarnings" barSize={30} fill="#2E7D32" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
