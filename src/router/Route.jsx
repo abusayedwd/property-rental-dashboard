@@ -30,6 +30,8 @@ import Banner from "../dashboard/menu/sidebarMenu/Banner";
 import AddBanner from "../dashboard/menu/sidebarMenu/AddBanner"; 
 import ForgotPassword from "../auth/ForgotPassword";
 import PrivateRoute from "./PrivateRoute";
+import ContactInfo from "../dashboard/menu/sidebarMenu/Contact";
+import EditContact from "../dashboard/menu/sidebarMenu/EditContact";
  
 
 
@@ -139,6 +141,14 @@ export const router = createBrowserRouter([
             {
                 path: 'subscription/editsubscription',
                 element: <Editsubscription/>
+            },
+            {
+                path: 'contact',
+                element: <ContactInfo/>
+            },
+            {
+                path: 'contact/editcontact',
+                element: <EditContact/>
             }
         ]
     }
