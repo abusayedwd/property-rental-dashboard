@@ -15,6 +15,7 @@ import Swal from "sweetalert2";
 import { SiMagento } from "react-icons/si";
 import { BsExclude } from "react-icons/bs";
 import { FaUserAlt } from "react-icons/fa";
+import { ContactsFilled } from "@ant-design/icons";
 
 const Sidebar = () => {
 
@@ -128,6 +129,18 @@ const Sidebar = () => {
             >
               <SiMagento className="h-7 w-7 lg:h-5 lg:w-5" />
               <span className="hidden ml-2 sm:block">Landlord</span>
+            </NavLink>
+
+            <NavLink
+              to="contact"
+              className={({ isActive }) =>
+                isActive
+                  ? "flex cursor-pointer items-center text-[18px] font-medium p-[10px] bg-[#FFFFFF] text-[#193664] m-[6px] rounded-lg"
+                  : "flex text-[white] cursor-pointer items-center text-[18px] font-medium p-[10px]   m-[6px] rounded-lg"
+              }
+            >
+              <ContactsFilled className="h-7 w-7 lg:h-5 lg:w-5" />
+              <span className="hidden ml-2 sm:block">ContactInfo</span>
             </NavLink>
 
             
