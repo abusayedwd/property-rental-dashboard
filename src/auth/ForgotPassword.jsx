@@ -1,124 +1,72 @@
- 
 import { Form, Input, Button } from "antd";
 import character from "../../public/image/forgotpass.png";
 import { HiOutlineMailOpen } from "react-icons/hi";
-import logo from '../../public/image/logo.png'
 import { useState } from "react";
-import { MdOutlineArrowBackIos } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { useForgotPasswordMutation } from "../redux/features/auth/forgotPassword";
 import toast, { Toaster } from "react-hot-toast";
- 
+import AuthLayout from "./AuthLayout";
 
 const ForgotPassword = () => {
-  const navigate = useNavigate()
-  const [error, setError] = useState('')
-  const [forgotpassword, ] = useForgotPasswordMutation()
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [forgotpassword, { isLoading }] = useForgotPasswordMutation();
 
-  const handleForgotPassword = async(values) => {
-    console.log("Received values:", values);
-  
-    try{
-      const res = await forgotpassword(values).unwrap()
-      // console.log(res);
-      
-      if(res?.code ==200){
-        toast.success(res?.message)
+  const handleForgotPassword = async (values) => {
+    setError("");
+    try {
+      const res = await forgotpassword(values).unwrap();
+      if (res?.code == 200) {
+        toast.success(res?.message);
         setTimeout(() => {
           navigate(`/verifyotp?email=${values?.email}`);
         }, 1000);
       }
-     
-    }catch(error){
-     console.log(error);
-     setError(error?.data?.message)
-      
+    } catch (error) {
+      setError(error?.data?.message || "Something went wrong. Please try again.");
     }
-
-    // Handle form submission here
-   
   };
 
   return (
-    <div className="mt-20 shadow-xl w-[80%] md:w-[1096px] mx-auto bg-white rounded-lg">
-      <Toaster position="top-center" reverseOrder = {false} /> 
-     
-      
-  
-      <div className="flex flex-col md:flex-row justify-around gap-4 px-6 md:px-10 py-8 md:py-4">
-        
-        {/* Image Section */}
-        <div className="hidden md:block mt-4 md:mt-[80px] w-full md:w-[490px] h-[300px] md:h-[460px] mx-auto md:mx-0">
-          <img src={character} alt="Forgot Password" className="w-full h-full object-cover" />
-        </div>
+    <AuthLayout
+      image={character}
+      imageAlt="Forgot password"
+      tagline={{
+        heading: "Forgot Your Password?",
+        subheading: "No worries — we'll send a verification code to get you back into your account.",
+      }}
+      title="Forgot password"
+      subtitle="Enter the email address associated with your account. We'll send you an OTP to your email."
+      onBack={() => navigate("/")}
+    >
+      <Toaster position="top-center" reverseOrder={false} />
+      <Form name="forgot_password" layout="vertical" onFinish={handleForgotPassword}>
+        <Form.Item
+          name="email"
+          label={<span className="text-[14px] font-medium text-gray-700">Email</span>}
+          rules={[{ required: true, message: "Please input your email!" }]}
+        >
+          <Input
+            size="large"
+            placeholder="Enter your email"
+            prefix={<HiOutlineMailOpen className="mr-2 text-gray-400" size={18} />}
+            className="!h-12 !rounded-lg !bg-gray-50 hover:!bg-gray-50 focus:!bg-white"
+          />
+        </Form.Item>
 
-        {/* Form Section */}
-        <div className="w-full md:w-[494px] mt-8 md:mt-[140px] mx-auto md:mx-0">
-          <img src={logo} alt="" />
-         <div className="flex items-center gap-2">
-         <MdOutlineArrowBackIos onClick={() => navigate('/')} className="text-2xl cursor-pointer" />
+        {error && <p className="text-red-500 text-sm font-medium mb-2">{error}</p>}
 
-          <h1 className="text-[#222222] font-medium text-xl md:text-2xl">
-            Forgot Password!
-          </h1>
-         </div>
-          <p className="font-poppins text-[14px] md:text-[16px] font-normal mt-2">
-            Enter the email address associated with your account. We'll send
-            you an OTP to your email.
-          </p>
-
-          <Form
-            name="forgot_password"
-            layout="vertical"
-            onFinish={handleForgotPassword}
-            className="mt-5"
+        <Form.Item className="mt-4 mb-0">
+          <Button
+            htmlType="submit"
+            loading={isLoading}
+            className="block w-full !h-12 !rounded-lg !text-white !bg-primaryBg hover:!bg-primaryBgDark !border-none !font-medium !text-[15px]"
           >
-           <Form.Item
-  name="email"
-  label={<span className="text-[16px] mt-5 font-medium">Email</span>}
-  rules={[
-    {
-      required: true,
-      message: "Please input your email!",
-    },
- 
-  ]}
->
-  <Input
-    size="large"
-    placeholder="Enter Your Email"
-    name="email"
-    prefix={
-      <HiOutlineMailOpen
-        className="mr-2 bg-white text-black rounded-full p-[6px]"
-        size={28}
-        color="red"
-      />
-    }
-    style={{
-      height: "52px",
-      background: "#E6F9EF",
-      outline: "none",
-      marginBottom: "20px",
-      border: '1px solid green'
-    }}
-  />
-</Form.Item>
-{/* <p className="text-red-500 font-medium">{error}</p> */}
-            <Form.Item>
-              <Button 
-            //   loading = {isLoading}
-                type="primary"
-                htmlType="submit"
-          className="block w-full h-[52px] px-2 py-4 mt-2 !text-white !bg-primaryBg"
-              >
-                Send OTP
-              </Button>
-            </Form.Item>
-          </Form>
-        </div>
-      </div>
-    </div>
+            Send OTP
+          </Button>
+        </Form.Item>
+      </Form>
+    </AuthLayout>
   );
 };
 
