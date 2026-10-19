@@ -10,7 +10,7 @@ const blockUnblockUser = apiSlice.injectEndpoints({
           url: `/users/blockstatus/${id}`,
           method: "PATCH", 
         }),
-        invalidatesTags: [{ type: "Users" }],
+        invalidatesTags: (result, error, id) => [{ type: "Users" }, { type: "Users", id }],
       }),
     }),
   });

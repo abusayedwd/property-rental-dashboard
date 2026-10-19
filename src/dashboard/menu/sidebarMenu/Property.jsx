@@ -136,6 +136,8 @@ import url from "../../../redux/api/baseUrl";
 import { AppstoreAddOutlined, EnvironmentOutlined, HomeOutlined, FilterOutlined } from "@ant-design/icons";
 import { useDeletepropertyMutation } from "../../../redux/features/property/deleteProperty";
 import toast, { Toaster } from "react-hot-toast";
+// Slider top (৳5 crore); selecting it means "no upper limit"
+const MAX_PRICE = 50000000;
 
 const { Option } = Select;
 
@@ -149,7 +151,7 @@ const Property = () => {
     type: '',
     rooms: null,
     baths: null,
-    priceRange: [0, 1000000],
+    priceRange: [0, MAX_PRICE],
   });
   
   const pageSize = 10;
@@ -177,8 +179,10 @@ const Property = () => {
       const matchesBaths = !filters.baths || 
         property.baths === filters.baths;
       
-      const matchesPrice = property.price >= filters.priceRange[0] && 
-        property.price <= filters.priceRange[1];
+      const price = Number(String(property.price ?? "").replace(/,/g, "")) || 0;
+      // The top of the slider means "no upper limit"
+      const matchesPrice = price >= filters.priceRange[0] &&
+        (filters.priceRange[1] >= MAX_PRICE || price <= filters.priceRange[1]);
 
       return matchesPlace && matchesPropertyType && matchesType && 
         matchesRooms && matchesBaths && matchesPrice;
@@ -300,9 +304,9 @@ const Property = () => {
               value={filters.priceRange}
               onChange={(value) => handleFilterChange('priceRange', value)}
               min={0}
-              max={1000000}
-              step={1000}
-              tipFormatter={(value) => `$${value.toLocaleString()}`}
+              max={MAX_PRICE}
+              step={50000}
+              tipFormatter={(value) => `৳${value.toLocaleString("en-IN")}${value >= MAX_PRICE ? "+" : ""}`}
             />
           </div>
         </div>
@@ -368,7 +372,7 @@ const Property = () => {
 
                 <div className="flex justify-between items-center mb-3">
                   <p className="text-green-600 font-bold text-xl">
-                    Price: ₦{property.price?.toLocaleString() || "N/A"}
+                    Price: {property.price ? `৳${Number(String(property.price).replace(/,/g, "")).toLocaleString("en-IN")}` : "N/A"}
                   </p>
                   <div className="text-gray-500 text-sm flex items-center gap-1">
                     <HomeOutlined />

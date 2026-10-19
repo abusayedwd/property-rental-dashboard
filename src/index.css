@@ -4,4 +4,34 @@
 
 body {
   font-family: "Poppins", sans-serif;
+  background-color: #f5f7fb;
+  color: #1f2937;
+}
+
+/* Tables: quiet header, roomy rows */
+.ant-table-wrapper .ant-table {
+  background: transparent;
+}
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: #f9fafb !important;
+  color: #6b7280 !important;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid #eef0f4 !important;
+}
+.ant-table-wrapper .ant-table-thead > tr > th::before {
+  display: none;
+}
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  color: #374151;
+  border-bottom: 1px solid #f1f3f7;
+}
+.ant-table-wrapper .ant-table-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+.anticon {
+  vertical-align: middle;
 }

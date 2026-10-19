@@ -1,33 +1,43 @@
-import { Outlet } from "react-router-dom"; 
- 
- 
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
- 
- 
-const Main = () => {
-    return (
-        <div>
-             <div className="flex p-4 min-h-screen">
-      <div className="fixed z-30 w-[200px] left-3"> 
-       <Sidebar />
-      </div> 
-      <div className="flex flex-col flex-1 overflow-hidden">
-        
-        <div className=" fixed xl:ml-[310px] lg:ml-[250px] md:ml-[200px] sm:ml-[120px] ml-[120px] w-[75%] mx-auto z-30  lg:w-[calc(98%-300px)]">
-         <Header />
-        </div>
 
-        <div className="overflow-y-auto ml-8 h-full flex-1 pt-[80px] lg:pl-[280px] md:pl-[220px] sm:pl-[160px] pl-[120px]">
+const Main = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  // Close the mobile sidebar whenever the route changes
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  return (
+    <div className="min-h-screen bg-[#F5F7FB]">
+      {/* Mobile backdrop */}
+      <div
+        onClick={() => setSidebarOpen(false)}
+        className={`fixed inset-0 z-30 bg-[#0F1530]/50 transition-opacity lg:hidden ${
+          sidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-[260px] transform transition-transform duration-300 lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <Sidebar />
+      </aside>
+
+      <div className="flex min-h-screen flex-col lg:pl-[260px]">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <Outlet />
-        </div>
+        </main>
       </div>
-       
     </div>
-        </div>
-    );
+  );
 };
 
 export default Main;
-
- 

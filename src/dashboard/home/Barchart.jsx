@@ -1,95 +1,125 @@
-import React, { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Select } from 'antd';
+import React, { useMemo, useState } from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Select, Skeleton } from 'antd';
 import { useChatEarningQuery } from '../../redux/features/earning/monthlyEarning';
- 
 
-const data = [
-  { month: 'Jan', pv: 2400, amt: 2400 },
-  { month: 'Feb', pv: 1398, amt: 2210 },
-  { month: 'Mar', uv: 2000, pv: 9800, amt: 2290 },
-  { month: 'Apr', uv: 2780, pv: 3908, amt: 2000 },
-  { month: 'May', uv: 1890, pv: 4800, amt: 2181 },
-  { month: 'Jun', uv: 2390, pv: 3800, amt: 2500 },
-  { month: 'Jul', uv: 3490, pv: 5300, amt: 2100 },
-  { month: 'Aug', uv: 3490, pv: 8300, amt: 2100 },
-  { month: 'Sep', uv: 3490, pv: 7300, amt: 2100 },
-  { month: 'Oct', uv: 3490, pv: 4300, amt: 2100 },
-  { month: 'Nov', uv: 3490, pv: 9300, amt: 2100 },  // Fixed "Nev" to "Nov"
-  { month: 'Dec', uv: 2490, pv: 7300, amt: 2100 },
-];
+// Line uses the darker brand green: #00BF63 is below 3:1 contrast on white
+const LINE = '#059347';
+const FILL = '#00BF63';
+const FIRST_YEAR = 2024;
+const currentYear = new Date().getFullYear();
+const yearOptions = Array.from({ length: currentYear - FIRST_YEAR + 1 }, (_, i) => {
+  const y = String(currentYear - i);
+  return { value: y, label: y };
+});
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="custom-tooltip bg-white p-2 border border-gray-300 rounded">
-        <p className="label font-medium">{`${label} : ${payload[0].value}`}</p>
-        <p className="desc text-sm text-gray-600">Additional details can be shown here.</p>
-      </div>
-    );
-  }
+const formatMoney = (value) =>
+  `$${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
-  return null;
+const formatAxis = (value) =>
+  `$${Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(value)}`;
+
+const CustomTooltip = ({ active, payload, label, year }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-gray-100 bg-white px-3 py-2 shadow-lg">
+      <p className="text-xs text-gray-500">{label} {year}</p>
+      <p className="mt-0.5 text-sm font-semibold text-gray-900">{formatMoney(payload[0].value)}</p>
+    </div>
+  );
 };
 
-
+const Summary = ({ label, value }) => (
+  <div>
+    <p className="text-xs font-medium text-gray-500">{label}</p>
+    <p className="mt-1 text-lg font-semibold text-gray-900">{value}</p>
+  </div>
+);
 
 const Barchart = () => {
+  const [year, setYear] = useState(String(currentYear))
+  const { data: earnings, isFetching } = useChatEarningQuery(year)
 
-const [year, setYear] = useState('2025')
+  const chartData = useMemo(
+    () => (earnings?.data?.attributes || []).map((d) => ({ month: d.month, total: Number(d.totalEarnings) || 0 })),
+    [earnings]
+  );
 
-console.log(year);
-
-const {data: earnings} = useChatEarningQuery(year)
-
-console.log(earnings)
-
-const handleChange = (value) => {
-  console.log(`selected ${value}`);
-  setYear(value)
-};
+  const total = chartData.reduce((sum, d) => sum + d.total, 0);
+  const best = chartData.reduce((max, d) => (d.total > (max?.total ?? 0) ? d : max), null);
+  // Average over months elapsed so far for the current year
+  const monthsElapsed = Number(year) === currentYear ? new Date().getMonth() + 1 : 12;
 
   return (
-    <div>
-      <div className="flex justify-between items-center pt-2 ">
-      <h1 className="font-medium text-header">Earning</h1>
-        <Select
-          defaultValue="2025"
-          className="border-none"
-          style={{
-            width: 120,
-            border: 'none',
-          }}
-          onChange={handleChange}
-          options={[
-            { value: '2024', label: '2024' },
-            { value: '2025', label: '2025' },
-            { value: '2026', label: '2026' },
-            { value: '2027', label: '2027' },
-            { value: '2028', label: '2028' },
-            { value: '2029', label: '2029' },
-            { value: '2030', label: '2030' },
-          ]}
-        />
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-card sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-semibold text-gray-900">Earnings overview</h2>
+          <p className="mt-0.5 text-sm text-gray-500">Monthly revenue from successful payments</p>
+        </div>
+        <Select value={year} onChange={setYear} options={yearOptions} className="w-28" />
       </div>
 
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart
-          data={earnings?.data?.attributes}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
-        >
-          <CartesianGrid strokeDasharray="" />
-          <XAxis dataKey="month" /> {/* Fixed dataKey to 'month' */}
-          <YAxis />
-          <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey="totalEarnings" barSize={30} fill="#2E7D32" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="mt-5 grid grid-cols-3 gap-4 border-b border-gray-100 pb-5">
+        <Summary label={`Total ${year}`} value={formatMoney(total)} />
+        <Summary label="Best month" value={best ? `${best.month} · ${formatAxis(best.total)}` : '—'} />
+        <Summary label="Monthly average" value={formatMoney(total / monthsElapsed)} />
+      </div>
+
+      <div className="relative mt-4 h-[300px]">
+        {isFetching && !chartData.length ? (
+          <Skeleton active paragraph={{ rows: 7 }} />
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="earningsFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={FILL} stopOpacity={0.28} />
+                    <stop offset="100%" stopColor={FILL} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke="#EEF0F4" />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                  dy={8}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                  tickFormatter={formatAxis}
+                  width={56}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  content={<CustomTooltip year={year} />}
+                  cursor={{ stroke: '#9CA3AF', strokeWidth: 1, strokeDasharray: '4 4' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  stroke={LINE}
+                  strokeWidth={2}
+                  fill="url(#earningsFill)"
+                  dot={false}
+                  activeDot={{ r: 5, fill: LINE, stroke: '#fff', strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+            {!isFetching && total === 0 && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <p className="rounded-lg bg-white/90 px-4 py-2 text-sm text-gray-500">
+                  No earnings recorded in {year}
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

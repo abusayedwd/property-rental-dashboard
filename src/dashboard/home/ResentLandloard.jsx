@@ -2,7 +2,6 @@ import { Button, DatePicker, Input, Modal, Space, Table } from "antd";
 import { BsInfoCircle } from "react-icons/bs";
 import { useState } from "react";
 import { CloseOutlined } from "@ant-design/icons";
-import './transaction.css'
 import { useGetAllLandlordQuery } from "../../redux/features/user/getAllLandlord";
 import url from "../../redux/api/baseUrl";
  
