@@ -130,8 +130,9 @@
 // export default Property;
 
 import React, { useState } from "react";
-import { Button, Tag, Select, Pagination, Input, Slider } from "antd";
-import { useGetPromotedPropertiesQuery } from "../../../redux/features/property/getPromotinProperty";
+import { Button, Tag, Select, Pagination, Input, Slider, Modal } from "antd";
+import { useGetAdminPropertiesQuery, useModeratePropertyMutation } from "../../../redux/features/property/adminProperties";
+import { HiOutlineEye, HiOutlineEyeSlash, HiOutlineFlag, HiOutlineTrash, HiOutlineMapPin } from "react-icons/hi2";
 import url from "../../../redux/api/baseUrl";
 import { AppstoreAddOutlined, EnvironmentOutlined, HomeOutlined, FilterOutlined } from "@ant-design/icons";
 import { useDeletepropertyMutation } from "../../../redux/features/property/deleteProperty";
@@ -156,10 +157,39 @@ const Property = () => {
   
   const pageSize = 10;
 
-  const { data: propertiess, isLoading } = useGetPromotedPropertiesQuery();
+  // Every listing (not only promoted ones), including listings hidden by an admin
+  const { data: propertiess, isLoading } = useGetAdminPropertiesQuery();
   const [deleteProperty] = useDeletepropertyMutation();
+  const [moderateProperty] = useModeratePropertyMutation();
 
-  let properties = propertiess?.data?.attributes?.results || [];
+  let properties = propertiess?.data?.attributes || [];
+
+  const toggleVisibility = (property) => {
+    const hide = property.moderation?.status !== "hidden";
+    let reason = "";
+    Modal.confirm({
+      title: hide ? "Hide this listing?" : "Show this listing again?",
+      content: hide ? (
+        <div>
+          <p className="mb-2 text-gray-500">It will disappear from the website. The owner is notified.</p>
+          <Input.TextArea rows={2} maxLength={300} placeholder="Reason shown to the owner (optional)" onChange={(e) => (reason = e.target.value)} />
+        </div>
+      ) : (
+        "It will be visible on the website again and the owner is notified."
+      ),
+      okText: hide ? "Hide listing" : "Show listing",
+      okButtonProps: { danger: hide },
+      centered: true,
+      onOk: async () => {
+        try {
+          await moderateProperty({ id: property.id, status: hide ? "hidden" : "active", reason: reason.trim() || undefined }).unwrap();
+          toast.success(hide ? "Listing hidden" : "Listing visible again");
+        } catch (error) {
+          toast.error(error?.data?.message || "Could not update the listing");
+        }
+      },
+    });
+  };
 
   // Filter properties
   const filterProperties = (data) => {
@@ -210,15 +240,23 @@ const Property = () => {
     currentPage * pageSize
   );
 
-  const propertyDelete = async(id) => {
-    try {
-      const res = await deleteProperty(id).unwrap();
-      if(res?.code == 200) {
-        toast.success(res?.message);
-      }
-    } catch(error) {
-      console.log(error);
-    }
+  // Deleting is permanent, so ask first
+  const propertyDelete = (id) => {
+    Modal.confirm({
+      title: "Delete this listing permanently?",
+      content: "This can't be undone. Consider hiding it instead.",
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      centered: true,
+      onOk: async () => {
+        try {
+          const res = await deleteProperty(id).unwrap();
+          toast.success(res?.message || "Listing deleted");
+        } catch (error) {
+          toast.error(error?.data?.message || "Could not delete the listing");
+        }
+      },
+    });
   };
 
   const handleFilterChange = (field, value) => {
@@ -342,70 +380,71 @@ const Property = () => {
         ) : paginatedProperties.length === 0 ? (
           <p className="text-center text-gray-500">No properties found.</p>
         ) : (
-          paginatedProperties.map((property) => (
-            <div
-              key={property.id}
-              className="border rounded-lg shadow-md overflow-hidden bg-white"
-            >
-              <div className="relative">
-                <img
-                  src={property?.images ? url + property.images[0]?.url : "/images/default-home.png"}
-                  alt={property.houseName}
-                  className="w-full h-48 object-cover"
-                />
-                <Tag color="red" className="absolute top-2 left-2 px-3 py-1 text-sm font-semibold">
-                  {property.propertyType === "sell" ? "For Sale" : "For Rent"}
-                </Tag>
-              </div>
-
-              <div className="p-4 bg-green-50">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-gray-800 mb-1">
-                    {property.houseName || "Unnamed Property"}
-                  </h2>
+          paginatedProperties.map((property) => {
+            const hidden = property.moderation?.status === "hidden";
+            const closed = ["sold", "rented"].includes(property.propertyType);
+            return (
+              <div key={property.id} className={`flex flex-col overflow-hidden rounded-xl border bg-white shadow-card ${hidden ? "border-red-200" : "border-gray-100"}`}>
+                <div className="relative">
+                  <img
+                    src={property?.images?.[0]?.url ? url + property.images[0].url : "/image/service.jpg"}
+                    alt={property.houseName}
+                    className={`h-44 w-full object-cover ${hidden ? "opacity-50 grayscale" : ""}`}
+                  />
+                  <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+                    <Tag color={closed ? "default" : property.propertyType === "sell" ? "blue" : "green"} className="!m-0">
+                      {{ sell: "For Sale", rent: "For Rent", sold: "Sold", rented: "Rented" }[property.propertyType] || property.propertyType}
+                    </Tag>
+                    {property.isPromotion && <Tag color="gold" className="!m-0">Featured</Tag>}
+                    {hidden && <Tag color="red" className="!m-0">Hidden</Tag>}
+                  </div>
+                  {property.openReports > 0 && (
+                    <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
+                      <HiOutlineFlag size={12} /> {property.openReports}
+                    </span>
+                  )}
                 </div>
 
-                <p className="text-gray-500 text-sm flex items-center gap-2 mb-2">
-                  <EnvironmentOutlined />
-                  Place: {property.place || "No address provided"}
-                </p>
-
-                <div className="flex justify-between items-center mb-3">
-                  <p className="text-green-600 font-bold text-xl">
-                    Price: {property.price ? `৳${Number(String(property.price).replace(/,/g, "")).toLocaleString("en-IN")}` : "N/A"}
+                <div className="flex flex-1 flex-col p-4">
+                  <p className="text-lg font-bold text-gray-900">
+                    {property.price ? `৳${Number(String(property.price).replace(/,/g, "")).toLocaleString("en-IN")}` : "N/A"}
                   </p>
-                  <div className="text-gray-500 text-sm flex items-center gap-1">
-                    <HomeOutlined />
-                    Type: {property.type || "N/A"}
-                  </div>
-                </div>
+                  <h2 className="line-clamp-1 font-semibold text-gray-800">{property.houseName || "Unnamed property"}</h2>
+                  <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
+                    <HiOutlineMapPin size={14} className="shrink-0" />
+                    <span className="line-clamp-1">{[property.subState, property.state].filter(Boolean).join(", ") || property.place || "—"}</span>
+                  </p>
+                  <p className="mt-2 text-xs text-gray-500">
+                    {property.rooms ?? 0} beds · {property.baths ?? 0} baths · <span className="capitalize">{property.type || "—"}</span> · {property.views ?? 0} views
+                  </p>
+                  <p className="mt-1 line-clamp-1 text-xs text-gray-400">Owner: {property.landlordId?.fullName || "—"}</p>
+                  {hidden && property.moderation?.reason && (
+                    <p className="mt-2 rounded-md bg-red-50 px-2 py-1 text-xs text-red-600">Reason: {property.moderation.reason}</p>
+                  )}
 
-                <div className="grid grid-cols-3 gap-2 text-gray-600 text-sm mb-4">
-                  <div className="flex items-center gap-1">
-                    <AppstoreAddOutlined />
-                    Rooms: {property?.rooms || "N/A"}
+                  <div className="mt-auto flex gap-2 pt-4">
+                    <Button
+                      size="small"
+                      onClick={() => toggleVisibility(property)}
+                      icon={hidden ? <HiOutlineEye size={14} /> : <HiOutlineEyeSlash size={14} />}
+                      className="!flex flex-1 items-center justify-center"
+                    >
+                      {hidden ? "Show" : "Hide"}
+                    </Button>
+                    <Button
+                      size="small"
+                      danger
+                      icon={<HiOutlineTrash size={14} />}
+                      onClick={() => propertyDelete(property?.id)}
+                      className="!flex flex-1 items-center justify-center"
+                    >
+                      Delete
+                    </Button>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <AppstoreAddOutlined />
-                    Baths: {property.baths || "N/A"}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <AppstoreAddOutlined />
-                    State: {property.state || "N/A"}
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    className="px-2 py-1 bg-[#FF0000] !text-[#FFFFFF] rounded-lg hover:bg-blue-600 transition-all duration-300"
-                    onClick={() => propertyDelete(property?.id)}
-                  >
-                    Delete
-                  </button>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

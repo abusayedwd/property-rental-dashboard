@@ -8,7 +8,7 @@ const deleteproperty = apiSlice.injectEndpoints({
                 url: `/property/${id}`,
                 method: "DELETE", 
             }),
-            invalidatesTags: [{type: "Property"}]
+            invalidatesTags: [{ type: "Property" }, { type: "Property", id: "ADMIN" }]
         })
     })
 })

@@ -32,6 +32,7 @@ import ForgotPassword from "../auth/ForgotPassword";
 import PrivateRoute from "./PrivateRoute";
 import ContactInfo from "../dashboard/menu/sidebarMenu/Contact";
 import EditContact from "../dashboard/menu/sidebarMenu/EditContact";
+import Reports from "../dashboard/menu/sidebarMenu/Reports";
  
 
 
@@ -96,6 +97,10 @@ export const router = createBrowserRouter([
             {
                 path: "landlord",
                 element: <Landlord />
+            },
+            {
+                path: "reports",
+                element: <Reports />
             },
             {
                 path: "property",

@@ -27,6 +27,7 @@ const pageTitles = {
   settings: "Settings",
   profile: "Profile",
   notification: "Notifications",
+  reports: "Reports",
 };
 
 const passwordInputClass = "!h-11 !rounded-lg";

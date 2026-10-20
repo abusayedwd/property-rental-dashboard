@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { Avatar } from "antd";
 import { useGetProfileQuery } from "../redux/features/auth/profile/getProfile";
 import url from "../redux/api/baseUrl";
+import { useGetReportsQuery } from "../redux/features/property/adminProperties";
 import {
   HiOutlineSquares2X2,
   HiOutlinePhoto,
@@ -11,6 +12,7 @@ import {
   HiOutlineBanknotes,
   HiOutlineHomeModern,
   HiOutlineKey,
+  HiOutlineFlag,
   HiOutlinePhone,
   HiOutlineCog6Tooth,
   HiOutlineArrowRightOnRectangle,
@@ -23,6 +25,7 @@ const navItems = [
   { to: "earning", label: "Earning", icon: HiOutlineBanknotes },
   { to: "property", label: "Property", icon: HiOutlineHomeModern },
   { to: "landlord", label: "Landlord", icon: HiOutlineKey },
+  { to: "reports", label: "Reports", icon: HiOutlineFlag, badgeKey: "openReports" },
   { to: "contact", label: "Contact Info", icon: HiOutlinePhone },
   { to: "settings", label: "Settings", icon: HiOutlineCog6Tooth },
 ];
@@ -50,6 +53,9 @@ const Sidebar = () => {
 
   const { data: user } = useGetProfileQuery();
   const profile = user?.data?.attributes?.user;
+  // Open reports waiting for review (badge on the Reports item)
+  const { data: reportData } = useGetReportsQuery("open", { pollingInterval: 60000 });
+  const badges = { openReports: reportData?.data?.attributes?.counts?.open || 0 };
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#1F2B5C] via-[#171F3D] to-[#0F1530] text-white shadow-2xl">
@@ -67,7 +73,7 @@ const Sidebar = () => {
           Main menu
         </p>
         <ul className="space-y-1.5">
-          {navItems.map(({ to, label, icon: Icon }) => (
+          {navItems.map(({ to, label, icon: Icon, badgeKey }) => (
             <li key={to}>
               <NavLink
                 to={to}
@@ -89,6 +95,11 @@ const Sidebar = () => {
                       <Icon size={18} />
                     </span>
                     {label}
+                    {badgeKey && badges[badgeKey] > 0 && (
+                      <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white">
+                        {badges[badgeKey]}
+                      </span>
+                    )}
                   </>
                 )}
               </NavLink>
