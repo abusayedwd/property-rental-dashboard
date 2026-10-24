@@ -33,6 +33,7 @@ import PrivateRoute from "./PrivateRoute";
 import ContactInfo from "../dashboard/menu/sidebarMenu/Contact";
 import EditContact from "../dashboard/menu/sidebarMenu/EditContact";
 import Reports from "../dashboard/menu/sidebarMenu/Reports";
+import Verifications from "../dashboard/menu/sidebarMenu/Verifications";
  
 
 
@@ -101,6 +102,10 @@ export const router = createBrowserRouter([
             {
                 path: "reports",
                 element: <Reports />
+            },
+            {
+                path: "verifications",
+                element: <Verifications />
             },
             {
                 path: "property",

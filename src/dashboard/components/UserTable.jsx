@@ -5,6 +5,7 @@ import { HiOutlineEye, HiOutlineMagnifyingGlass, HiOutlineNoSymbol, HiOutlineChe
 import url from "../../redux/api/baseUrl";
 import { useBlockUnblockUserMutation } from "../../redux/features/user/blockUnblockUser";
 import UserDetailsModal from "./UserDetailsModal";
+import { mediaUrl } from "../../utils/media";
 
 const PAGE_SIZE = 10;
 
@@ -68,7 +69,7 @@ const UserTable = ({ title, subtitle, useListQuery, showCompany = false }) => {
       key: "user",
       render: (_, record) => (
         <button type="button" onClick={() => setSelectedId(record.id)} className="flex items-center gap-3 text-left">
-          <Avatar src={record.image?.url ? url + record.image.url : undefined} className="!bg-primaryBg shrink-0">
+          <Avatar src={mediaUrl(record.image?.url) || undefined} className="!bg-primaryBg shrink-0">
             {record.fullName?.[0]?.toUpperCase()}
           </Avatar>
           <span className="min-w-0">

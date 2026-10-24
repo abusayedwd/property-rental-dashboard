@@ -15,6 +15,7 @@ import toast, { Toaster } from "react-hot-toast";
  
 import { useGetProfileQuery } from "../../../redux/features/auth/profile/getProfile";
 import { useUpdateUserMutation } from "../../../redux/features/auth/profile/editProfile";
+import { mediaUrl } from "../../../utils/media";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const EditProfile = () => {
 
 
       const profileImageUrl = profile.data.attributes?.user?.image?.url
-        ? url + profile.data.attributes?.user?.image?.url
+        ? mediaUrl(profile.data.attributes?.user?.image?.url)
         : defaultUserImage;
 
       setImageUrl(profileImageUrl);

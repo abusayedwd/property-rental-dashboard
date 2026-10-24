@@ -14,10 +14,10 @@ const yearOptions = Array.from({ length: currentYear - FIRST_YEAR + 1 }, (_, i) 
 });
 
 const formatMoney = (value) =>
-  `$${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  `৳${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
 const formatAxis = (value) =>
-  `$${Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(value)}`;
+  `৳${Intl.NumberFormat("en-IN", { notation: 'compact', maximumFractionDigits: 1 }).format(value)}`;
 
 const CustomTooltip = ({ active, payload, label, year }) => {
   if (!active || !payload?.length) return null;

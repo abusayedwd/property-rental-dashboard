@@ -15,6 +15,7 @@ import url from "../redux/api/baseUrl";
 import { useChangePasswordMutation } from "../redux/features/auth/changePassword";
 import toast, { Toaster } from "react-hot-toast";
 import { confirmLogout } from "./Sidebar";
+import { mediaUrl } from "../utils/media";
 
 const pageTitles = {
   home: "Dashboard",
@@ -28,6 +29,7 @@ const pageTitles = {
   profile: "Profile",
   notification: "Notifications",
   reports: "Reports",
+  verifications: "Owner verifications",
 };
 
 const passwordInputClass = "!h-11 !rounded-lg";
@@ -128,7 +130,7 @@ const Header = ({ onMenuClick }) => {
           >
             <Avatar
               size={36}
-              src={profile?.image?.url ? url + profile.image.url : undefined}
+              src={mediaUrl(profile?.image?.url) || undefined}
               className="!bg-white !text-[#059347] !font-semibold"
             >
               {profile?.fullName?.[0]?.toUpperCase()}

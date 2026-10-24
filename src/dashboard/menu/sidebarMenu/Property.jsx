@@ -130,15 +130,75 @@
 // export default Property;
 
 import React, { useState } from "react";
-import { Button, Tag, Select, Pagination, Input, Slider, Modal } from "antd";
+import { Button, Tag, Select, Pagination, Input, Slider, Modal, Segmented, Image } from "antd";
 import { useGetAdminPropertiesQuery, useModeratePropertyMutation } from "../../../redux/features/property/adminProperties";
-import { HiOutlineEye, HiOutlineEyeSlash, HiOutlineFlag, HiOutlineTrash, HiOutlineMapPin } from "react-icons/hi2";
+import { HiOutlineEye, HiOutlineEyeSlash, HiOutlineFlag, HiOutlineTrash, HiOutlineMapPin, HiOutlineCheck, HiOutlineXMark, HiOutlineDocumentText, HiOutlineShieldCheck } from "react-icons/hi2";
 import url from "../../../redux/api/baseUrl";
 import { AppstoreAddOutlined, EnvironmentOutlined, HomeOutlined, FilterOutlined } from "@ant-design/icons";
 import { useDeletepropertyMutation } from "../../../redux/features/property/deleteProperty";
 import toast, { Toaster } from "react-hot-toast";
+import { mediaUrl } from "../../../utils/media";
 // Slider top (৳5 crore); selecting it means "no upper limit"
 const MAX_PRICE = 50000000;
+
+const reviewOf = (p) => p.moderation?.status || "active";
+const AMENITY_LABELS = { gas: "Gas line", lift: "Lift", generator: "Generator", parking: "Parking", security: "Security guard", cctv: "CCTV", wifi: "Wi-Fi ready", balcony: "Balcony", water: "24h water", rooftop: "Rooftop", gym: "Gym", pool: "Pool" };
+const cap = (v) => (v ? String(v).charAt(0).toUpperCase() + String(v).slice(1) : "—");
+const taka = (n) => (n || n === 0 ? `৳${Number(String(n).replace(/,/g, "")).toLocaleString("en-IN")}` : "—");
+
+// Everything an admin needs to judge a listing before approving it
+const ListingPreview = ({ property, onClose }) => {
+  if (!property) return null;
+  const rows = [
+    ["Price", `${taka(property.price)}${property.propertyType === "rent" ? " /month" : ""}${property.negotiable ? " (negotiable)" : ""}`],
+    ["Advance", property.advanceMonths != null ? `${property.advanceMonths} months` : "—"],
+    ["Service charge", property.serviceCharge ? taka(property.serviceCharge) : "—"],
+    ["Type", cap(property.type)],
+    ["Suitable for", cap(property.tenantType || "any")],
+    ["Beds / baths", `${property.rooms ?? 0} / ${property.baths ?? 0}`],
+    ["Size", property.sizeSqft ? `${property.sizeSqft} sq ft` : "—"],
+    ["Floor", property.floor || "—"],
+    ["Furnishing", cap(property.furnishing)],
+    ["Address", [property.place, property.subState, property.state].filter(Boolean).join(", ")],
+    ["Map pin", property.location?.coordinates ? `${property.location.coordinates[1]}, ${property.location.coordinates[0]}` : "Not set"],
+    ["Owner", `${property.landlordId?.fullName || "—"} (${property.landlordId?.email || "no email"})`],
+  ];
+  return (
+    <Modal open onCancel={onClose} footer={null} width={760} centered title={property.houseName}>
+      <Image.PreviewGroup>
+        <div className="mb-4 flex gap-2 overflow-x-auto">
+          {(property.images || []).map((img, i) => (
+            <Image key={img._id || i} src={mediaUrl(img.url)} width={150} height={110} className="rounded-lg object-cover" />
+          ))}
+        </div>
+      </Image.PreviewGroup>
+      <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+        {rows.map(([k, v]) => (
+          <div key={k} className="flex justify-between gap-3 border-b border-gray-100 py-2 text-sm">
+            <dt className="text-gray-500">{k}</dt>
+            <dd className="text-right font-medium text-gray-800">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      {property.amenities?.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {property.amenities.map((a) => <Tag key={a}>{AMENITY_LABELS[a] || a}</Tag>)}
+        </div>
+      )}
+      <p className="mt-4 whitespace-pre-line rounded-lg bg-gray-50 p-3 text-sm text-gray-700">{property.textArea || "No description"}</p>
+      {property.location?.coordinates && (
+        <a
+          className="mt-3 inline-block text-sm text-primaryBg underline"
+          href={`https://www.google.com/maps?q=${property.location.coordinates[1]},${property.location.coordinates[0]}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Check the pin on Google Maps
+        </a>
+      )}
+    </Modal>
+  );
+};
 
 const { Option } = Select;
 
@@ -161,8 +221,39 @@ const Property = () => {
   const { data: propertiess, isLoading } = useGetAdminPropertiesQuery();
   const [deleteProperty] = useDeletepropertyMutation();
   const [moderateProperty] = useModeratePropertyMutation();
+  const [reviewTab, setReviewTab] = useState("all");
+  const [preview, setPreview] = useState(null);
 
-  let properties = propertiess?.data?.attributes || [];
+  const allProperties = propertiess?.data?.attributes || [];
+  const reviewCounts = allProperties.reduce((acc, p) => ({ ...acc, [reviewOf(p)]: (acc[reviewOf(p)] || 0) + 1 }), {});
+  let properties = reviewTab === "all" ? allProperties : allProperties.filter((p) => reviewOf(p) === reviewTab);
+
+  // Approve a waiting listing, or reject it with a reason the owner sees
+  const decide = (property, approve) => {
+    let reason = "";
+    Modal.confirm({
+      title: approve ? "Approve this listing?" : "Reject this listing?",
+      content: approve ? (
+        "It goes live on the website, the owner is notified, and members with matching saved searches get an alert."
+      ) : (
+        <div>
+          <p className="mb-2 text-gray-500">The owner is notified and can edit the listing to send it again.</p>
+          <Input.TextArea rows={2} maxLength={300} placeholder="What needs fixing? e.g. photos are not of this flat" onChange={(e) => (reason = e.target.value)} />
+        </div>
+      ),
+      okText: approve ? "Approve" : "Reject",
+      okButtonProps: { danger: !approve },
+      centered: true,
+      onOk: async () => {
+        try {
+          await moderateProperty({ id: property.id, status: approve ? "active" : "rejected", reason: reason.trim() || undefined }).unwrap();
+          toast.success(approve ? "Listing approved and live" : "Listing rejected");
+        } catch (error) {
+          toast.error(error?.data?.message || "Could not update the listing");
+        }
+      },
+    });
+  };
 
   const toggleVisibility = (property) => {
     const hide = property.moderation?.status !== "hidden";
@@ -273,7 +364,23 @@ const Property = () => {
       
       {/* Header and Controls */}
       <div className="mb-8">
-        <h1 className="text-[32px] mb-6">Property</h1>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-[32px]">Property</h1>
+          <Segmented
+            value={reviewTab}
+            onChange={(v) => {
+              setReviewTab(v);
+              setCurrentPage(1);
+            }}
+            options={[
+              { value: "all", label: `All (${allProperties.length})` },
+              { value: "pending", label: `Waiting for review (${reviewCounts.pending || 0})` },
+              { value: "active", label: `Live (${reviewCounts.active || 0})` },
+              { value: "rejected", label: `Rejected (${reviewCounts.rejected || 0})` },
+              { value: "hidden", label: `Hidden (${reviewCounts.hidden || 0})` },
+            ]}
+          />
+        </div>
         
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-white rounded-lg shadow mb-6">
@@ -302,13 +409,9 @@ const Property = () => {
             onChange={(value) => handleFilterChange('type', value)}
             allowClear
           >
-            <Option value="duplex">Duplex</Option>
-              <Option value="bungalow">Bungalow</Option>
-              <Option value="studio">Studio</Option>
-              <Option value="flat">Flat</Option>
-              <Option value="self-con">Self-con</Option>
-              <Option value="warehouse">Warehouse</Option>
-              <Option value="other">Other</Option>
+            {["flat", "duplex", "house", "bungalow", "studio", "room", "seat", "office", "shop", "plot", "warehouse", "other"].map((t) => (
+              <Option key={t} value={t} className="capitalize">{t}</Option>
+            ))}
           </Select>
           
           <Select
@@ -344,7 +447,7 @@ const Property = () => {
               min={0}
               max={MAX_PRICE}
               step={50000}
-              tipFormatter={(value) => `৳${value.toLocaleString("en-IN")}${value >= MAX_PRICE ? "+" : ""}`}
+              tooltip={{ formatter: (value) => `৳${value.toLocaleString("en-IN")}${value >= MAX_PRICE ? "+" : ""}` }}
             />
           </div>
         </div>
@@ -381,13 +484,15 @@ const Property = () => {
           <p className="text-center text-gray-500">No properties found.</p>
         ) : (
           paginatedProperties.map((property) => {
-            const hidden = property.moderation?.status === "hidden";
+            const review = reviewOf(property);
+            const hidden = review === "hidden";
+            const waiting = review === "pending" || review === "rejected";
             const closed = ["sold", "rented"].includes(property.propertyType);
             return (
-              <div key={property.id} className={`flex flex-col overflow-hidden rounded-xl border bg-white shadow-card ${hidden ? "border-red-200" : "border-gray-100"}`}>
+              <div key={property.id} className={`flex flex-col overflow-hidden rounded-xl border bg-white shadow-card ${hidden || review === "rejected" ? "border-red-200" : review === "pending" ? "border-amber-300" : "border-gray-100"}`}>
                 <div className="relative">
                   <img
-                    src={property?.images?.[0]?.url ? url + property.images[0].url : "/image/service.jpg"}
+                    src={mediaUrl(property?.images?.[0]?.url) || "/image/service.jpg"}
                     alt={property.houseName}
                     className={`h-44 w-full object-cover ${hidden ? "opacity-50 grayscale" : ""}`}
                   />
@@ -397,6 +502,8 @@ const Property = () => {
                     </Tag>
                     {property.isPromotion && <Tag color="gold" className="!m-0">Featured</Tag>}
                     {hidden && <Tag color="red" className="!m-0">Hidden</Tag>}
+                    {review === "pending" && <Tag color="orange" className="!m-0">Waiting for review</Tag>}
+                    {review === "rejected" && <Tag color="red" className="!m-0">Rejected</Tag>}
                   </div>
                   {property.openReports > 0 && (
                     <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
@@ -417,12 +524,36 @@ const Property = () => {
                   <p className="mt-2 text-xs text-gray-500">
                     {property.rooms ?? 0} beds · {property.baths ?? 0} baths · <span className="capitalize">{property.type || "—"}</span> · {property.views ?? 0} views
                   </p>
-                  <p className="mt-1 line-clamp-1 text-xs text-gray-400">Owner: {property.landlordId?.fullName || "—"}</p>
-                  {hidden && property.moderation?.reason && (
+                  <p className="mt-1 flex items-center gap-1 text-xs text-gray-400">
+                    <span className="line-clamp-1">Owner: {property.landlordId?.fullName || "—"}</span>
+                    {property.landlordId?.isVerifiedOwner && <HiOutlineShieldCheck className="shrink-0 text-green-600" title="Verified owner" />}
+                  </p>
+                  <button type="button" onClick={() => setPreview(property)} className="mt-2 flex items-center gap-1 self-start text-xs font-medium text-primaryBg hover:underline">
+                    <HiOutlineDocumentText size={14} /> View full details
+                  </button>
+                  {(hidden || review === "rejected") && property.moderation?.reason && (
                     <p className="mt-2 rounded-md bg-red-50 px-2 py-1 text-xs text-red-600">Reason: {property.moderation.reason}</p>
                   )}
 
                   <div className="mt-auto flex gap-2 pt-4">
+                    {waiting ? (
+                      <>
+                        <Button
+                          size="small"
+                          type="primary"
+                          onClick={() => decide(property, true)}
+                          icon={<HiOutlineCheck size={14} />}
+                          className="!flex flex-1 items-center justify-center !bg-primaryBg"
+                        >
+                          Approve
+                        </Button>
+                        {review === "pending" && (
+                          <Button size="small" danger onClick={() => decide(property, false)} icon={<HiOutlineXMark size={14} />} className="!flex flex-1 items-center justify-center">
+                            Reject
+                          </Button>
+                        )}
+                      </>
+                    ) : (
                     <Button
                       size="small"
                       onClick={() => toggleVisibility(property)}
@@ -431,6 +562,7 @@ const Property = () => {
                     >
                       {hidden ? "Show" : "Hide"}
                     </Button>
+                    )}
                     <Button
                       size="small"
                       danger
@@ -447,6 +579,8 @@ const Property = () => {
           })
         )}
       </div>
+
+      <ListingPreview property={preview} onClose={() => setPreview(null)} />
 
       {/* Pagination */}
       <div className="mt-8 flex justify-center">

@@ -26,6 +26,7 @@ import { FaWhatsapp, FaFacebook, FaLinkedin } from "react-icons/fa";
 import url from "../../redux/api/baseUrl";
 import { useGetUserOverviewQuery } from "../../redux/features/user/userOverview";
 import { useBlockUnblockUserMutation } from "../../redux/features/user/blockUnblockUser";
+import { mediaUrl } from "../../utils/media";
 
 const ROLE = {
   user: { label: "Tenant / Buyer", color: "green" },
@@ -108,7 +109,7 @@ const PropertyRow = ({ property, meta }) => {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-gray-100 p-2.5">
       <img
-        src={property.image ? url + property.image : "/image/service.jpg"}
+        src={mediaUrl(property.image) || "/image/service.jpg"}
         alt=""
         className="h-12 w-16 shrink-0 rounded-md object-cover"
       />
@@ -242,7 +243,7 @@ const UserDetailsModal = ({ userId, onClose }) => {
             <Stat icon={HiOutlineHomeModern} label="Listings" value={stats.properties ?? 0} accent="bg-primarySoft text-primaryBgDark" />
             <Stat icon={HiOutlineBolt} label="Featured" value={stats.featuredProperties ?? 0} accent="bg-amber-50 text-amber-600" />
             <Stat icon={HiOutlineArchiveBox} label="Rented / Sold" value={stats.closedProperties ?? 0} accent="bg-gray-100 text-gray-600" />
-            <Stat icon={HiOutlineBanknotes} label="Paid" value={`$${stats.totalPaid ?? 0}`} accent="bg-blue-50 text-blue-600" />
+            <Stat icon={HiOutlineBanknotes} label="Paid" value={`৳${Number(stats.totalPaid ?? 0).toLocaleString("en-IN")}`} accent="bg-blue-50 text-blue-600" />
           </>
         ) : (
           <>
@@ -278,7 +279,7 @@ const UserDetailsModal = ({ userId, onClose }) => {
                       {t.promotionStatus || t.status}
                     </Tag>
                     <span className="font-semibold text-gray-900">
-                      {t.currency === "USD" ? "$" : ""}{t.amount}
+                      {t.currency === "USD" ? "$" : "৳"}{Number(t.amount).toLocaleString("en-IN")}
                     </span>
                   </span>
                 </div>
@@ -329,7 +330,7 @@ const UserDetailsModal = ({ userId, onClose }) => {
             <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">
               <Avatar
                 size={76}
-                src={user.image?.url ? url + user.image.url : undefined}
+                src={mediaUrl(user.image?.url) || undefined}
                 className="shrink-0 border-[3px] border-white/80 !bg-primaryBg !text-2xl shadow-lg"
               >
                 {user.fullName?.[0]?.toUpperCase()}

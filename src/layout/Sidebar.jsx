@@ -4,7 +4,8 @@ import Swal from "sweetalert2";
 import { Avatar } from "antd";
 import { useGetProfileQuery } from "../redux/features/auth/profile/getProfile";
 import url from "../redux/api/baseUrl";
-import { useGetReportsQuery } from "../redux/features/property/adminProperties";
+import { useGetReportsQuery, useGetVerificationsQuery, useGetAdminPropertiesQuery } from "../redux/features/property/adminProperties";
+import { mediaUrl } from "../utils/media";
 import {
   HiOutlineSquares2X2,
   HiOutlinePhoto,
@@ -13,6 +14,7 @@ import {
   HiOutlineHomeModern,
   HiOutlineKey,
   HiOutlineFlag,
+  HiOutlineShieldCheck,
   HiOutlinePhone,
   HiOutlineCog6Tooth,
   HiOutlineArrowRightOnRectangle,
@@ -23,9 +25,10 @@ const navItems = [
   { to: "banner", label: "Banner", icon: HiOutlinePhoto },
   { to: "user", label: "Users", icon: HiOutlineUsers },
   { to: "earning", label: "Earning", icon: HiOutlineBanknotes },
-  { to: "property", label: "Property", icon: HiOutlineHomeModern },
+  { to: "property", label: "Property", icon: HiOutlineHomeModern, badgeKey: "pendingListings" },
   { to: "landlord", label: "Landlord", icon: HiOutlineKey },
   { to: "reports", label: "Reports", icon: HiOutlineFlag, badgeKey: "openReports" },
+  { to: "verifications", label: "Verifications", icon: HiOutlineShieldCheck, badgeKey: "pendingVerifications" },
   { to: "contact", label: "Contact Info", icon: HiOutlinePhone },
   { to: "settings", label: "Settings", icon: HiOutlineCog6Tooth },
 ];
@@ -55,7 +58,14 @@ const Sidebar = () => {
   const profile = user?.data?.attributes?.user;
   // Open reports waiting for review (badge on the Reports item)
   const { data: reportData } = useGetReportsQuery("open", { pollingInterval: 60000 });
-  const badges = { openReports: reportData?.data?.attributes?.counts?.open || 0 };
+  // Listings and owner documents waiting for review
+  const { data: verificationData } = useGetVerificationsQuery("pending", { pollingInterval: 60000 });
+  const { data: propertyData } = useGetAdminPropertiesQuery(undefined, { pollingInterval: 60000 });
+  const badges = {
+    openReports: reportData?.data?.attributes?.counts?.open || 0,
+    pendingVerifications: verificationData?.data?.attributes?.counts?.pending || 0,
+    pendingListings: (propertyData?.data?.attributes || []).filter((p) => p.moderation?.status === "pending").length,
+  };
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#1F2B5C] via-[#171F3D] to-[#0F1530] text-white shadow-2xl">
@@ -113,7 +123,7 @@ const Sidebar = () => {
           <div className="flex items-center gap-3">
             <Avatar
               size={40}
-              src={profile?.image?.url ? url + profile.image.url : undefined}
+              src={mediaUrl(profile?.image?.url) || undefined}
               className="!bg-[#00BF63] ring-2 ring-white/20"
             >
               {profile?.fullName?.[0]?.toUpperCase()}

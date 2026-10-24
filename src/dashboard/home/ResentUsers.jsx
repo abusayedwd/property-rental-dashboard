@@ -5,6 +5,7 @@ import { HiOutlineEye, HiArrowRight } from "react-icons/hi2";
 import { useGetAllUsersQuery } from "../../redux/features/user/getAllUsers";
 import url from "../../redux/api/baseUrl";
 import UserDetailsModal from "../components/UserDetailsModal";
+import { mediaUrl } from "../../utils/media";
 
 const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—";
@@ -22,7 +23,7 @@ const ResentUser = () => {
       key: "name",
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <Avatar src={record?.image?.url ? url + record.image.url : undefined} className="!bg-primaryBg">
+          <Avatar src={mediaUrl(record?.image?.url) || undefined} className="!bg-primaryBg">
             {record?.fullName?.[0]?.toUpperCase()}
           </Avatar>
           <span className="font-medium text-gray-900">{record?.fullName || "—"}</span>

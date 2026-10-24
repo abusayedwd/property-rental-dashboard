@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CloseOutlined } from "@ant-design/icons";
 import { useGetAllLandlordQuery } from "../../redux/features/user/getAllLandlord";
 import url from "../../redux/api/baseUrl";
+import { mediaUrl } from "../../utils/media";
  
 const { Search } = Input;
  
@@ -60,7 +61,7 @@ const [user, setUser] = useState()
       render: (_, record) => (
         <div className="flex gap-2 items-center">
            
-          <img className="h-8 rounded-full" src={ url + record?.image?.url} alt="" />
+          <img className="h-8 rounded-full" src={mediaUrl(record?.image?.url)} alt="" />
           <p className="font-medium">{record?.fullName}</p>
         </div>
       ),

@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { HiOutlineFlag, HiOutlineEyeSlash, HiOutlineCheck, HiOutlineXMark, HiOutlineMapPin } from "react-icons/hi2";
 import url from "../../../redux/api/baseUrl";
 import { useGetReportsQuery, useReviewReportMutation } from "../../../redux/features/property/adminProperties";
+import { mediaUrl } from "../../../utils/media";
 
 const REASON = {
   fake: "Fake listing or photos",
@@ -83,7 +84,7 @@ const Reports = () => {
               <article key={report.id} className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-card">
                 <div className="flex flex-col gap-4 p-5 md:flex-row">
                   <img
-                    src={property?.images?.[0]?.url ? url + property.images[0].url : "/image/service.jpg"}
+                    src={mediaUrl(property?.images?.[0]?.url) || "/image/service.jpg"}
                     alt=""
                     className="h-32 w-full shrink-0 rounded-lg object-cover md:h-24 md:w-36"
                   />
@@ -111,7 +112,7 @@ const Reports = () => {
 
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 bg-gray-50 px-5 py-3">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Avatar size={26} src={report.reporterId?.image?.url ? url + report.reporterId.image.url : undefined} className="!bg-primaryBg !text-xs">
+                    <Avatar size={26} src={mediaUrl(report.reporterId?.image?.url) || undefined} className="!bg-primaryBg !text-xs">
                       {report.reporterId?.fullName?.[0]?.toUpperCase()}
                     </Avatar>
                     Reported by <span className="font-medium text-gray-800">{report.reporterId?.fullName || "—"}</span>

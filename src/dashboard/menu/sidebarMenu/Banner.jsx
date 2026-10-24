@@ -8,6 +8,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { Link } from 'react-router-dom'; 
 import bannerr from "./../../../../public/image/nodata.png";
 import { Skeleton } from 'antd';
+import { mediaUrl } from "../../../utils/media";
  
 const Banner = () => { 
     const { data: banner, isLoading: isDataLoading } = useGetBannerQuery(); 
@@ -84,7 +85,7 @@ const Banner = () => {
  
                         return imageUrl ? ( 
                             <div className="relative" key={index}> 
-                                <img className='h-80 w-full object-cover' src={url + imageUrl} alt={`Banner ${index}`} /> 
+                                <img className='h-80 w-full object-cover' src={mediaUrl(imageUrl)} alt={`Banner ${index}`} /> 
                                 <button 
                                     className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded" 
                                     onClick={() => handleDelete(item?._id)} 
@@ -179,7 +180,7 @@ export default Banner;
 
 //                         return imageUrl ? (
 //                             <div className="relative" key={index}>
-//                                 <img className='h-80 w-full object-cover' src={url + imageUrl} alt={`Banner ${index}`} />
+//                                 <img className='h-80 w-full object-cover' src={mediaUrl(imageUrl)} alt={`Banner ${index}`} />
 //                                 <button
 //                                     className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded"
 //                                     onClick={() => handleDelete(item?._id)}

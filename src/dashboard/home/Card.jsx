@@ -28,7 +28,7 @@ const Card = () => {
   const cards = [
     {
       label: 'Total Earnings',
-      value: `$${Number(stats?.totalAmount || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
+      value: `৳${Number(stats?.totalAmount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
       icon: HiOutlineBanknotes,
       accent: 'bg-primarySoft text-primaryBgDark',
     },
